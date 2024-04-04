@@ -1,0 +1,35 @@
+# docker-compose.yml
+version: '3.8'
+name: event-ingestion
+
+services:
+  postgres:
+    build:
+      context: seed
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_DB: warehouse
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: username
+    ports:
+      - 5435:5432
+    restart: on-failure
+    volumes:
+      - ./seed/docker_postgres_init.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql
+
+  pgweb:
+    image: sosedoff/pgweb
+    depends_on:
+      - postgres
+    environment:
+      PGWEB_DATABASE_URL: postgres://username:password@postgres:5432/warehouse?sslmode=disable
+      DATABASE_URL: postgres://username:password@postgres:5432/warehouse
+    links:
+      - postgres:postgres
+    ports:
+      - 8085:8081
+    restart: on-failure
+
+
+
+
